@@ -6,7 +6,7 @@ import { BaseMapSwitcher } from "../core/BasemapSwitcherModal";
 import { ZoomPill } from "../core/ZoomPill";
 import { LocateMeButton } from "../core/LocateMeButton";
 import { toast } from "sonner";
-import { MapPinHouse, RouteOff, Share2 } from "lucide-react";
+import { House, RouteOff, Share2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "react-i18next";
 
@@ -86,7 +86,7 @@ export function Sidebar({
         <ZoomPill />
         <LocateMeButton />
         <AnimatedButton
-          icon={MapPinHouse}
+          icon={House}
           title={t("actions.resetview", "Reset View")}
           tooltip={t("actions.resetview", "Reset View")}
           onClick={onReset}
