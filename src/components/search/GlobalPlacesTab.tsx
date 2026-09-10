@@ -39,11 +39,9 @@ type Feature = {
 export function GlobalPlacesTab({
   query,
   onQueryChange,
-  onPicked,
 }: {
   query: string;
   onQueryChange: (q: string) => void;
-  onPicked: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const [results, setResults] = useState<Feature[]>([]);
@@ -148,7 +146,6 @@ export function GlobalPlacesTab({
     if (center && m) {
       m.flyTo({ center, zoom: 14, speed: 1.2 });
     }
-    onPicked(); // close modal (or advance flow)
   };
 
   return (

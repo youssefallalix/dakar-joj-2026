@@ -80,11 +80,7 @@ export const SearchPlaces = () => {
   )
 }
 
-export const SearchPlacesModal = ({
-  setPanelOpen,
-}: {
-  setPanelOpen: (open: boolean) => void;
-}) => {
+export const SearchPlacesModal = () => {
   // default = "Search Anywhere"
   const { t } = useTranslation();
   const categories = CATEGORIES;
@@ -104,7 +100,6 @@ export const SearchPlacesModal = ({
         <GlobalPlacesTab
           query={globalQuery}
           onQueryChange={setGlobalQuery}
-          onPicked={() => setPanelOpen(false)}
         />
       </TabsContent>
       <TabsContent value="local">
@@ -112,7 +107,6 @@ export const SearchPlacesModal = ({
           categories={categories}
           query={localQuery}
           onQueryChange={setLocalQuery}
-          onPicked={() => setPanelOpen(false)}
         />
       </TabsContent>
     </Tabs>

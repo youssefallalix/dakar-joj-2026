@@ -1,21 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Feature, Point, GeoJsonProperties } from "geojson";
-// import { MapManager } from "../../../core/MapManager";
-// import {
-//   getZonesForCategory,
-//   getZoneFeatureCollection,
-//   getUnassignedFeatureCollection,
-// } from "../../../data/firestore/firestorePlaces";
+import { Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MapManager } from "../../core/MapManager";
 import {
-  getUnassignedFeatureCollection,
-  getZoneFeatureCollection,
-  getZonesForCategory,
+  getFeatureCollection,
 } from "../../data/firestore/firestorePlaces";
-import { useTranslation } from "react-i18next";
-import { Field } from "@/components/ui/field";
+import { getLocalizedCategory } from "../place-list/categoryTranslations";
+import {
+  getMainCategoryIcon,
+  getMainCategoryColor
+} from "../place-list/place-list-utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle
+} from "@/components/ui/item";
 import { Empty, EmptyDescription } from "@/components/ui/empty";
+import { Field } from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -23,27 +29,27 @@ import {
 } from "@/components/ui/input-group"
 // import { Kbd } from "@/components/ui/kbd"
 import { Spinner } from "@/components/ui/spinner";
-import { SearchIcon } from "lucide-react";
 import type { CategoryConfig } from "@/types/config";
 
 // —— types & helpers ——
 type VenueFeature = Feature<Point, GeoJsonProperties>;
 type LoadedVenue = VenueFeature & {
-  zoneColor: string;
-  __catId: string;
-  __catLabel: string;
-  __zone: string;
+  zoneColor?: string;
+  __catId?: string;
+  __catLabel?: string;
+  __zone?: string;
 };
 
-function getFeatureCategoryId(props: GeoJsonProperties | undefined): string {
-  const p = props || {};
-  const v =
-    (p.categoryId as string) ??
-    (p.category as string) ??
-    (p.cat as string) ??
-    (p.type as string) ??
-    "";
-  return String(v).toLowerCase();
+let allPlacesPromise: ReturnType<typeof getFeatureCollection> | null = null;
+
+function loadAllPlaces() {
+  if (!allPlacesPromise) {
+    allPlacesPromise = getFeatureCollection().catch((error) => {
+      allPlacesPromise = null;
+      throw error;
+    });
+  }
+  return allPlacesPromise;
 }
 
 function layerPrefixFor(catId: string): string {
@@ -88,11 +94,12 @@ function getCategoryLayerIds(catId: string, map: mapboxgl.Map): string[] {
 }
 
 function openPopupForCategory(
-  catId: string,
+  catId: string | undefined,
   lng: number,
   lat: number,
   map: mapboxgl.Map,
 ) {
+  if (!catId) return;
   const layerIds = getCategoryLayerIds(catId, map);
   if (layerIds.length === 0) return;
 
@@ -116,12 +123,10 @@ export function LocalPlacesTab({
   categories,
   query,
   onQueryChange,
-  onPicked,
 }: {
   categories: CategoryConfig[];
   query: string;
   onQueryChange: (q: string) => void;
-  onPicked: () => void;
 }) {
   const { t } = useTranslation();
   const mapManager = MapManager.getInstance();
@@ -141,66 +146,18 @@ export function LocalPlacesTab({
       const all: LoadedVenue[] = [];
 
       try {
-        for (const cat of categories) {
-          const sources = await getZonesForCategory(cat.id);
-
-          for (const site of sources) {
-            try {
-              const zoneId = site.file.replace("firestore://", "");
-              const { fc, color } = await getZoneFeatureCollection(zoneId);
-              const features = (fc.features || []) as VenueFeature[];
-
-              features
-                .filter((f) => {
-                  const catProp = getFeatureCategoryId(f.properties);
-                  if (!catProp) return true;
-                  if (catProp === cat.id) return true;
-
-                  if (cat.id === "competition") {
-                    const sc = Number(f.properties?.sportCount ?? 0);
-                    const hasSportsArr =
-                      Array.isArray(f.properties?.sports) &&
-                      f.properties!.sports.length > 0;
-                    return sc > 0 || hasSportsArr;
-                  }
-                  return false;
-                })
-                .forEach((f) => {
-                  const zoneLabel = site.name;
-                  const props = { ...f.properties, zone: zoneLabel };
-                  const enriched: LoadedVenue = {
-                    ...f,
-                    properties: props,
-                    zoneColor: site.color || color,
-                    __catId: cat.id,
-                    __catLabel: cat.label,
-                    __zone: zoneLabel,
-                  };
-                  all.push(enriched);
-                });
-            } catch (err) {
-              console.error(`Failed zone ${site.name}:`, err);
-            }
-          }
-
-          const { fc: unFc, color: unColor } =
-            await getUnassignedFeatureCollection(cat.id);
-          const unFeatures = (unFc.features || []) as VenueFeature[];
-          unFeatures.forEach((f) => {
-            const zoneLabel =
-              (f.properties?.zone as string) || t("local.zone.unassigned");
-            const props = { ...f.properties, zone: zoneLabel };
-            const enriched: LoadedVenue = {
-              ...f,
-              properties: props,
-              zoneColor: unColor,
-              __catId: cat.id,
-              __catLabel: cat.label,
-              __zone: zoneLabel,
-            };
-            all.push(enriched);
+        const { fc } = await loadAllPlaces();
+        const features = (fc.features || []) as VenueFeature[];
+        features.forEach((f) => {
+          const categoryId = f.properties?.categoryId;
+          const zone = f.properties?.zone;
+          all.push({
+            ...f,
+            properties: { ...f.properties },
+            __catId: typeof categoryId === "string" ? categoryId : undefined,
+            __zone: typeof zone === "string" ? zone : undefined,
           });
-        }
+        });
 
         if (!cancelled) {
           setVenues(all);
@@ -230,8 +187,8 @@ export function LocalPlacesTab({
         "";
       return (
         name.toLowerCase().includes(t) ||
-        v.__zone.toLowerCase().includes(t) ||
-        v.__catLabel.toLowerCase().includes(t)
+        v.__zone?.toLowerCase().includes(t) ||
+        v.__catId?.toLowerCase().includes(t)
       );
     });
   }, [query, venues]);
@@ -247,8 +204,6 @@ export function LocalPlacesTab({
       map.off("moveend", once);
     };
     map.on("moveend", once);
-
-    onPicked();
   };
 
   return (
@@ -257,7 +212,7 @@ export function LocalPlacesTab({
       <Field className="py-2">
         <InputGroup className="flex items-center gap-2">
           <InputGroupAddon>
-            <SearchIcon className="w-4 h-4 text-gray-400" />
+            <Search className="w-4 h-4 text-gray-400" />
           </InputGroupAddon>
           <InputGroupInput
             value={query}
@@ -293,36 +248,52 @@ export function LocalPlacesTab({
           </EmptyDescription>
         </Empty>
       ) : (
-        <ul className="max-h-[60vh] overflow-y-auto divide-y divide-black/5">
-          {filtered.map((v, i) => {
+        <ItemGroup className="max-h-[60vh] overflow-y-auto">
+          {filtered.map((v, index) => {
             const name =
               (v.properties?.Name as string) ||
               (v.properties?.title as string) ||
               (v.properties?.name as string) ||
               t("local.untitled");
-            const [lng, lat] = v.geometry.coordinates;
+            const mainCategory = v.properties?.mainCategoryId as string | undefined;
+            const Icon = getMainCategoryIcon(mainCategory);
+            const color = getMainCategoryColor(mainCategory);
             return (
-              <li key={`${name}-${i}`}>
-                <button
-                  onClick={() => handleSelect(v)}
-                  className="w-full text-left px-3 py-3 hover:bg-black/5 transition flex items-center gap-3"
-                >
-                  <span
-                    className="inline-block w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: v.zoneColor }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{name}</div>
-                    <div className="text-xs text-gray-500 truncate">
-                      {v.__catLabel} • {v.__zone} • {lng.toFixed(4)},
-                      {lat.toFixed(4)}
-                    </div>
-                  </div>
-                </button>
-              </li>
+              <Item key={index}
+                variant="outline"
+                size="sm"
+                onClick={() => handleSelect(v)}
+                className="hover:bg-primary/10 transition cursor-pointer"
+              >
+                <ItemMedia variant="icon">
+                  <Icon style={{ color: color }} />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{name}</ItemTitle>
+                  <ItemDescription >
+                    {getLocalizedCategory(v.__catId as any, t)}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemContent>
+                  <ItemDescription >
+                    {v.__zone || ""}
+                  </ItemDescription>
+                </ItemContent>
+                {v.properties?.imageUrl && (
+                  <ItemMedia variant="image">
+                    <img
+                      src={
+                        (v.properties?.imageUrl as string) ||
+                        undefined
+                      }
+                      alt={name}
+                    />
+                  </ItemMedia>
+                )}
+              </Item>
             );
           })}
-        </ul>
+        </ItemGroup>
       )}
     </div>
   );

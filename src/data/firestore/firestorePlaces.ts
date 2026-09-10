@@ -132,6 +132,40 @@ export async function getZoneFeatureCollection(zoneId: string) {
   return { color, fc: { type: "FeatureCollection", features } as const };
 }
 
+export async function getFeatureCollection() {
+  const places = await listPlaces({ scope: "all" });
+  const color = "#3b82f6";
+  const features = places
+    .map((p) => {
+      const { lat, lng } = toLatLng(p);
+      if (typeof lat !== "number" || typeof lng !== "number") return null;
+
+      const tags = parseStringArray(p.tags);
+      const gradient =
+        p.gradientFrom && p.gradientTo
+          ? [String(p.gradientFrom), String(p.gradientTo)]
+          : undefined;
+
+      return {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [lng, lat] as [number, number],
+        },
+        properties: {
+          ...p,
+          tags, // ✅ normalized
+          gradient, // ✅ array form
+          Name: p.name,
+          zone: p.zone,
+        },
+      } as GeoJSON.Feature;
+    })
+    .filter(Boolean) as GeoJSON.Feature[];
+
+  return { color, fc: { type: "FeatureCollection", features } as const };
+}
+
 export async function getMainCategoryFeatureCollection(mainCategoryId: string) {
   const places = await listPlaces({ mainCategoryId, scope: "all" });
   const features: Feature<Point, GeoJsonProperties>[] = places

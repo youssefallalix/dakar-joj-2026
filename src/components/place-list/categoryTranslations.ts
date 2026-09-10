@@ -21,6 +21,18 @@ export function translateCategoryLabel(
   }
 }
 
+export function getLocalizedCategory(
+  category: string,
+  t: TFunction,
+): string {
+  if (!category) return category;
+
+  const key = `placeCategory.${category}`;
+  const translated = t(key, { defaultValue: category });
+
+  return translated !== key ? translated : category;
+}
+
 export function withTranslatedCategoryLabels(
   categories: CategoryConfig[],
   t: TFunction,
