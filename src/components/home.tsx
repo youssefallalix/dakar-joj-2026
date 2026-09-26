@@ -85,6 +85,29 @@ export const HomeContent = () => {
       primaryAction: () => setActiveTab("events"),
       secondaryAction: null,
       secondaryActionLabel: null,
+      shortcut: false,
+    },
+    {
+      title: t("home.my_agenda", "My Agenda"),
+      available: true,
+      icon: Calendar,
+      color: "#FFA500",
+      active: false,
+      primaryAction: () => setActiveTab("events"),
+      secondaryAction: null,
+      secondaryActionLabel: null,
+      shortcut: true,
+    },
+    {
+      title: t("home.maps", "Maps"),
+      available: false,
+      icon: Map,
+      color: "#FFA500",
+      active: false,
+      primaryAction: () => null,
+      secondaryAction: null,
+      secondaryActionLabel: null,
+      shortcut: true,
     },
     {
       title: t("home.discover"),
@@ -95,6 +118,29 @@ export const HomeContent = () => {
       primaryAction: () => setActiveTab("discover"),
       secondaryAction: null,
       secondaryActionLabel: null,
+      shortcut: false,
+    },
+    {
+      title: t("home.torch", "Torch"),
+      available: true,
+      icon: Flame,
+      color: "#FFA500",
+      active: mapManager.isTorchVisible(),
+      primaryAction: () => void mapManager.toggleTorch(),
+      secondaryAction: null,
+      secondaryActionLabel: null,
+      shortcut: true,
+    },
+    {
+      title: t("home.news", "News"),
+      available: true,
+      icon: Newspaper,
+      color: "#FFA500",
+      active: false,
+      primaryAction: () => setActiveTab("news"),
+      secondaryAction: null,
+      secondaryActionLabel: null,
+      shortcut: true,
     },
     {
       title: t("home.business"),
@@ -105,41 +151,6 @@ export const HomeContent = () => {
       primaryAction: () => setActiveTab("business"),
       secondaryActionLabel: t("home.pricing", "See plans"),
       secondaryAction: () => navigate("/pricing"),
-    },
-  ]
-
-  const SHORTCUTS = [
-    {
-      title: t("home.my_agenda", "My Agenda"),
-      available: true,
-      icon: Calendar,
-      color: "#FFA500",
-      active: false,
-      onClick: () => setActiveTab("events"),
-    },
-    {
-      title: t("home.maps", "Maps"),
-      available: false,
-      icon: Map,
-      color: "#FFA500",
-      active: false,
-      onClick: () => null,
-    },
-    {
-      title: t("home.torch", "Torch"),
-      available: true,
-      icon: Flame,
-      color: "#FFA500",
-      active: mapManager.isTorchVisible(),
-      onClick: () => void mapManager.toggleTorch(),
-    },
-    {
-      title: t("home.news", "News"),
-      available: true,
-      icon: Newspaper,
-      color: "#FFA500",
-      active: false,
-      onClick: () => setActiveTab("news"),
     },
   ]
 
@@ -172,82 +183,90 @@ export const HomeContent = () => {
         <h2 className="text-xs text-muted-foreground uppercase">
           {t("home.start_with", "Start with...")}
         </h2>
-        <ItemGroup>
+        <ItemGroup className="w-full grid grid-cols-[minmax(0,1fr)_5rem_5rem] gap-1">
           {STARTERS.map((item, index) => (
-              <Item
-              key={index}
-              size="sm"
-                variant={item.available ? "outline" : "muted"}
-                className={cn(
-                  item.available ? "group hover:bg-primary/25 cursor-pointer" : "cursor-not-allowed"
-                )}
-                onClick={item.primaryAction}
-              >
-                <ItemMedia
-                  className={cn("rounded-lg w-8 h-8")}
-                  style={{ backgroundColor: item.color }}
-                  variant="icon"
-                >
-                  <item.icon
-                    className={cn("w-6 h-6")}
-                  />
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>
-                    {item.title}
-                  </ItemTitle>
-                  <ItemDescription>
-                    {item.description}
-                  </ItemDescription>
-                </ItemContent>
-                {!item.secondaryAction !== null && item.available && (
-                  <ItemContent className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ItemDescription>
-                      <ChevronRight className="w-4 h-4" />
-                    </ItemDescription>
-                  </ItemContent>
-                )}
-                {item.secondaryAction !== null && item.available && !isSignedIn && (
-                  <ItemActions>
-                    <Button
-                      className="cursor-pointer"
-                      variant="default"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        item.secondaryAction();
-                      }}
-                    >
-                      {item.secondaryActionLabel}
-                    </Button>
-                  </ItemActions>
-                )}
-              </Item>
-          ))}
-        </ItemGroup>
-      </div>
-      <div className="flex flex-col gap-4">
-        <h2 className="text-xs text-muted-foreground uppercase">
-          {t("home.quick_access", "Quick access")}
-        </h2>
-        <ItemGroup className="grid grid-cols-2 gap-2" >
-          {SHORTCUTS.map((item, index) => (
             <Item
               key={index}
-              size="xs"
+              size="sm"
               variant={item.available ? "outline" : "muted"}
-              className={item.available ? "hover:bg-primary/25 cursor-pointer" : "cursor-not-allowed"}
-              onClick={item.onClick}
+              className={cn(
+                "w-full",
+                "last:col-span-3",
+                !item.shortcut && "relative overflow-hidden",
+                item.shortcut
+                && "flex-col items-center justify-center",
+                item.available
+                  ? "group hover:bg-primary/25 cursor-pointer"
+                  : "cursor-not-allowed"
+              )}
+              style={!item.shortcut && item.available ? { backgroundColor: item.color + "10" } : undefined}
+              onClick={item.primaryAction}
             >
-              <ItemMedia variant="icon" >
-                <item.icon
-                  style={{ color: item.active ? item.color : undefined }}
-                />
+              <ItemMedia
+                variant={item.shortcut ? "icon" : "default"}
+                className={cn(
+                  !item.shortcut && "w-12 h-12",
+                  !item.shortcut && "-z-10",
+                  !item.shortcut && "absolute top-1/8 end-0 -translate-x-1/8 -translate-y-1/8"
+
+                )}
+              >
+                {item.shortcut ? (
+                  <item.icon
+                    className={cn(
+                      "w-12 h-12"
+                    )}
+                    style={item.shortcut ? { color: item.active ? item.color : undefined } : undefined}
+                  />
+                ) : (
+                  <item.icon
+                    className={cn(
+                      "w-12 h-12",
+                      "text-muted-foreground/20"
+                    )}
+                    style={{ color: item.color + "50" }}
+                  />
+                )}
               </ItemMedia>
-              <ItemContent>
-                <ItemTitle>
+
+              <ItemContent className="min-w-0">
+                <ItemTitle className={cn(
+                  !item.shortcut && "truncate whitespace-nowrap",
+                  item.shortcut ? "text-center text-xs" : "text-sm",
+                )}>
                   {item.title}
                 </ItemTitle>
+                {item.description && (
+
+                  <ItemDescription className={cn(
+                    "text-xs"
+                  )}>
+                    {item.description}
+                  </ItemDescription>
+                )}
               </ItemContent>
+
+              {!item.shortcut && item.secondaryAction !== null && item.available && !isSignedIn && (
+                <ItemActions>
+                  <Button
+                    className="cursor-pointer"
+                    variant="default"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      item.secondaryAction();
+                    }}
+                  >
+                    {item.secondaryActionLabel}
+                  </Button>
+                </ItemActions>
+              )}
+              {!item.shortcut && !item.secondaryAction !== null && item.available && (
+                <ItemActions className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ItemDescription>
+                    <ChevronRight className="w-4 h-4" />
+                  </ItemDescription>
+                </ItemActions>
+              )}
             </Item>
           ))}
         </ItemGroup>
