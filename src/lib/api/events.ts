@@ -45,3 +45,10 @@ export async function deleteEvent(id: string | undefined) {
     method: "DELETE",
   });
 }
+
+export async function addEventToCalendar(event: Event) {
+    const response = await apiRequest<{ success: true; data: Event }>(`api/v2/events/${event._id}/calendar`, {
+      method: "POST",
+    });
+    return response.data;
+  }

@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { cn } from "cn";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, ExternalLink } from "lucide-react";
+import { AlertCircle, CalendarPlus, Check, ExternalLink } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
   ItemGroup,
@@ -11,7 +14,14 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Icon } from "@iconify/react";
+import {
+  getCalendarUrl,
+  formatDuration,
+} from "../utils/calendar";
+import { addEventToCalendar } from "../lib/api/events";
+import { ALL_SPORT_OPTIONS } from "../data/sports";
 
 type ApiEventsItem = {
   _id: string;
@@ -28,7 +38,6 @@ type EventsResponse = {
   data: ApiEventsItem[];
 };
 
-import { ALL_SPORT_OPTIONS } from "../data/sports";
 export const SPORT_OPTIONS_BY_KEY = Object.fromEntries(
   ALL_SPORT_OPTIONS.map((sport) => [sport.key, sport])
 );
@@ -43,6 +52,41 @@ export const EventsContent = () => {
   const [events, setEvents] = useState<ApiEventsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingEventId, setLoadingEventId] = useState<string | null>(null);
+  const [trackedEventIds, setTrackedEventIds] = useState<Set<string>>(
+    () => new Set()
+  );
+
+  async function handleAddToCalendar(event: ApiEventsItem) {
+    setLoadingEventId(event._id);
+
+    try {
+      window.open(
+        getCalendarUrl(event),
+        "google-calendar",
+        [
+          `width=${600}`,
+          `height=${700}`,
+          `left=${200}`,
+          `top=${100}`,
+          "popup=yes",
+          "noopener,noreferrer",
+        ].join(",")
+      );
+
+      await addEventToCalendar(event);
+
+      setTrackedEventIds((prev) => {
+        const next = new Set(prev);
+        next.add(event._id);
+        return next;
+      });
+    } catch (error) {
+      console.error("Failed to track calendar addition:", error);
+    } finally {
+      setLoadingEventId(null);
+    }
+  }
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -75,6 +119,48 @@ export const EventsContent = () => {
     fetchEvents();
   }, []);
 
+
+  const groups = useMemo(() => {
+    const today = new Date();
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const isSameDay = (a: Date, b: Date) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+
+    const sortByStart = (
+      a: (typeof events)[number],
+      b: (typeof events)[number],
+    ) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+
+    const grouped = {
+      today: [] as typeof events,
+      tomorrow: [] as typeof events,
+      later: [] as typeof events,
+    };
+
+    for (const event of events) {
+      const start = new Date(event.startAt);
+
+      if (isSameDay(start, today)) {
+        grouped.today.push(event);
+      } else if (isSameDay(start, tomorrow)) {
+        grouped.tomorrow.push(event);
+      } else {
+        grouped.later.push(event);
+      }
+    }
+
+    grouped.today.sort(sortByStart);
+    grouped.tomorrow.sort(sortByStart);
+    grouped.later.sort(sortByStart);
+
+    return grouped;
+  }, [events]);
+
   if (loading) {
     return (
       <div className="flex flex-col gap-4 py-4">
@@ -106,58 +192,106 @@ export const EventsContent = () => {
           {t("events.plan_your_games", "Plan your Games")}
         </h2>
       </div>
+
       <div className="flex flex-col gap-4">
-        <ItemGroup className="gap-2">
-          {events.map((item, index) => {
-            const sport = SPORT_OPTIONS_BY_KEY[item.sport];
-            return (
-              <Item
-                key={index}
-                size="xs"
-                variant="outline"
-              >
-                {sport?.icon && (
-                  <ItemMedia variant="icon" >
-                    <Icon
-                      icon={getSportIcon({ sportId: item.sport }) || "mdi:help"}
-                    />
-                  </ItemMedia>
-                )}
-                <ItemContent className="min-w-0 flex-1">
-                  <ItemTitle
-                    className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
-                  >
-                    {item.name}
-                  </ItemTitle>
-                  <ItemDescription
-                    className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
-                  >
-                    {new Date(item.startAt).toLocaleDateString(lang, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    {" • "}
-                    {new Date(item.endAt).toLocaleDateString(lang, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemContent className="shrink-0">
-                  <ItemDescription className="text-xs">
-                    {item.venue}
-                  </ItemDescription>
-                </ItemContent>
-              </Item>
-            );
-          })}
-        </ItemGroup>
-        <Item
-          onClick={() => window.open("https://tickets.dakar2026.org/ticketing", "_blank")}
+        {[
+          [t("events.today", "Today"), groups.today],
+          [t("events.tomorrow", "Tomorrow"), groups.tomorrow],
+          [t("events.later", "Later"), groups.later],
+        ].map(([label, items]) => {
+          if (!items.length) return null;
+
+          return (
+            <div
+              className="flex flex-col gap-3"
+              key={label as string}>
+              <h2 className="text-xs text-muted-foreground uppercase">
+                {label as string}
+              </h2>
+
+              <ItemGroup className="gap-2">
+                {(items as typeof events).map((item, index) => {
+                  const sport = SPORT_OPTIONS_BY_KEY[item.sport];
+                  const isLoading = loadingEventId === item._id;
+                  const tracked = trackedEventIds.has(item._id);
+
+                  return (
+                    <Item
+                      key={index}
+                      size="xs"
+                      variant="outline"
+                      className="group hover:bg-accent"
+                    >
+                      {sport?.icon && (
+                        <ItemMedia variant="icon" >
+                          <Icon
+                            icon={getSportIcon({ sportId: item.sport }) || "mdi:help"}
+                          />
+                        </ItemMedia>
+                      )}
+                      <ItemContent className="min-w-0 flex-1">
+                        <ItemTitle
+                          className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
+                        >
+                          {item.name}
+                        </ItemTitle>
+                        <ItemDescription
+                          className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
+                        >
+                          {new Date(item.startAt).toLocaleDateString(lang, {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {" • "}
+                          {formatDuration(item.startAt, item.endAt, lang)}
+                        </ItemDescription>
+                      </ItemContent>
+                      <ItemContent className="shrink-0">
+                        <ItemDescription className="text-xs">
+                          {item.venue}
+                        </ItemDescription>
+                      </ItemContent>
+                      <ItemActions
+                        className={cn("shrink-0",
+                          "hidden opacity-0 group-hover:flex group-hover:opacity-100 transition-opacity duration-300",
+                          (tracked || isLoading) ? "flex opacity-100" : "",
+                        )}
+                      >
+                        <Button
+                          variant={isLoading ? "secondary" : tracked ? "outline" : "default"}
+                          size={tracked ? "default" : "icon"}
+                          onClick={() => handleAddToCalendar(item)}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Spinner />
+                              <span className="sr-only">{t("calendar.adding", "Adding...")}</span>
+                            </>
+                          ) : tracked ? (
+                            <>
+                              <Check />
+                              <span>{t("calendar.added", "Added")}</span>
+                            </>
+                          ) : (
+                            <>
+                              <CalendarPlus />
+                              <span className="sr-only">{t("calendar.addToCalendar", "Add to Calendar")}</span>
+                            </>
+                          )}
+                        </Button>
+                      </ItemActions>
+                    </Item>
+                  );
+                })}
+              </ItemGroup>
+            </div>
+          )
+        })}
+
+        <Item onClick={() => window.open("https://tickets.dakar2026.org/ticketing", "_blank")}
           variant="outline"
           className="w-full sticky rounded-xl p-4 bg-primary/90 backdrop-blur-sm min-h-12 bottom-0 cursor-pointer">
           <ItemContent>

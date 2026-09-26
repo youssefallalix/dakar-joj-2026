@@ -118,3 +118,67 @@ export async function deleteEvent(id: string) {
 
   return result.deletedCount === 1;
 }
+
+export async function trackCalendarAddition({
+  userId,
+  eventId,
+  provider,
+}: {
+  userId: string;
+  eventId: string;
+  provider: "google";
+}) {
+  const db = await getMongoDatabase();
+  const now = new Date().toISOString();
+
+  await db.collection("calendar_additions").updateOne(
+    {
+      userId,
+      eventId,
+      provider,
+    },
+    {
+      $setOnInsert: {
+        userId,
+        eventId,
+        provider,
+        createdAt: now,
+      },
+      $set: {
+        updatedAt: now,
+      },
+    },
+    {
+      upsert: true,
+    }
+  );
+}
+
+export async function hasCalendarAddition({
+  userId,
+  eventId,
+  provider,
+}: {
+  userId: string;
+  eventId: string;
+  provider: "google";
+}): Promise<boolean> {
+  const db = await getMongoDatabase();
+
+  const addition = await db
+    .collection("calendar_additions")
+    .findOne(
+      {
+        userId,
+        eventId,
+        provider,
+      },
+      {
+        projection: {
+          _id: 1,
+        },
+      }
+    );
+
+  return addition !== null;
+}
