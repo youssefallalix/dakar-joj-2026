@@ -24,7 +24,7 @@
     "search": "Rechercher",
     "events": "Programme",
     "news": "Actu",
-    "stats": "Stats",
+    "stats": "Chiffres",
     "business": "Espace Pro"
   },
   "home": {
@@ -55,7 +55,7 @@
     "plan_your_games": "Planifiez vos Jeux"
   },
   "stats": {
-    "stats": "Stats",
+    "stats": "Chiffres",
     "gamesinnumers": "La compétition en chiffres",
     "competition_sites": "Sites de compétition",
     "competition_sports": "Sports de compétition",

@@ -24,7 +24,7 @@
     "search": "Search",
     "events": "Schedule",
     "news": "News",
-    "stats": "Chiffres",
+    "stats": "Stats",
     "business": "Business"
   },
   "home": {
@@ -55,7 +55,7 @@
     "plan_your_games": "Plan your Games"
   },
   "stats": {
-    "stats": "Chiffres",
+    "stats": "Stats",
     "gamesinnumers": "The Games in numbers",
     "competition_sites": "Competition Sites",
     "competition_sports": "Competition Sports",
