@@ -13,8 +13,17 @@ import { eventSchema } from "../../../shared/contracts.js";
 export const eventRoutes = new Hono();
 
 eventRoutes.get("/", async (c) => {
+  const user = c.get("user");
   const requestedStatus = c.req.query("status");
-  const status = requestedStatus === "all" ? undefined : requestedStatus ?? "published";
+
+  const isAdmin = user?.role === "admin";
+
+  const status = isAdmin
+    ? requestedStatus === "all"
+      ? undefined
+      : requestedStatus
+    : "published";
+
   const limit = c.req.query("limit") ? Number(c.req.query("limit")) : undefined;
 
   const events = await listEvents({
