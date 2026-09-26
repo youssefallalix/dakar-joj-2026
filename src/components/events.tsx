@@ -119,24 +119,23 @@ export const EventsContent = () => {
     fetchEvents();
   }, []);
 
-
   const groups = useMemo(() => {
-    const today = new Date();
+    const now = new Date();
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
 
-    const isSameDay = (a: Date, b: Date) =>
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-    const sortByStart = (
-      a: (typeof events)[number],
-      b: (typeof events)[number],
-    ) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+    const startOfDayAfterTomorrow = new Date(startOfTomorrow);
+    startOfDayAfterTomorrow.setDate(
+      startOfDayAfterTomorrow.getDate() + 1,
+    );
 
     const grouped = {
+      earlier: [] as typeof events,
+      happening: [] as typeof events,
       today: [] as typeof events,
       tomorrow: [] as typeof events,
       later: [] as typeof events,
@@ -144,16 +143,41 @@ export const EventsContent = () => {
 
     for (const event of events) {
       const start = new Date(event.startAt);
+      const end = new Date(event.endAt);
 
-      if (isSameDay(start, today)) {
+      // Event has completely finished.
+      if (end <= now) {
+        grouped.earlier.push(event);
+        continue;
+      }
+
+      // Event is currently happening.
+      if (start <= now && now < end) {
+        grouped.happening.push(event);
+        continue;
+      }
+
+      // Event hasn't started yet.
+      if (start < startOfTomorrow) {
         grouped.today.push(event);
-      } else if (isSameDay(start, tomorrow)) {
+      } else if (start < startOfDayAfterTomorrow) {
         grouped.tomorrow.push(event);
       } else {
         grouped.later.push(event);
       }
     }
 
+    const sortByStart = (
+      a: (typeof events)[number],
+      b: (typeof events)[number],
+    ) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+
+    grouped.earlier.sort(
+      (a, b) =>
+        new Date(b.endAt).getTime() - new Date(a.endAt).getTime(),
+    );
+
+    grouped.happening.sort(sortByStart);
     grouped.today.sort(sortByStart);
     grouped.tomorrow.sort(sortByStart);
     grouped.later.sort(sortByStart);
@@ -195,6 +219,7 @@ export const EventsContent = () => {
 
       <div className="flex flex-col gap-4">
         {[
+          [t("events.happening", "Happening now"), groups.happening],
           [t("events.today", "Today"), groups.today],
           [t("events.tomorrow", "Tomorrow"), groups.tomorrow],
           [t("events.later", "Later"), groups.later],
