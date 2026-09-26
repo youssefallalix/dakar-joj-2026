@@ -52,8 +52,17 @@
   "events": {
     "events": "Events",
     "live_and_upcoming": "Live and upcoming",
-    "plan_your_games": "Plan your Games"
+    "plan_your_games": "Plan your Games",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "later": "Later"
   },
+  "calendar": {
+    "add_to_calendar": "Add to calendar",
+    "adding_to_calendar": "Adding ...",
+    "added_to_calendar": "Added to calendar"
+  },
+  "visit_tickets_website": "Get your tickets now",
   "stats": {
     "stats": "Stats",
     "gamesinnumers": "The Games in numbers",

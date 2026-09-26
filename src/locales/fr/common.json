@@ -52,8 +52,17 @@
   "events": {
     "events": "Événements",
     "live_and_upcoming": "En direct & à venir",
-    "plan_your_games": "Planifiez vos Jeux"
+    "plan_your_games": "Planifiez vos Jeux",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "later": "Plus tard"
   },
+  "calendar": {
+    "add_to_calendar": "Ajouter au calendrier",
+    "adding_to_calendar": "Ajout ...",
+    "added_to_calendar": "Ajouté"
+  },
+  "visit_tickets_website": "Obtenez vos billets maintenant",
   "stats": {
     "stats": "Chiffres",
     "gamesinnumers": "La compétition en chiffres",

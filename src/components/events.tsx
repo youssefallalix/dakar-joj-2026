@@ -268,17 +268,17 @@ export const EventsContent = () => {
                           {isLoading ? (
                             <>
                               <Spinner />
-                              <span className="sr-only">{t("calendar.adding", "Adding...")}</span>
+                              <span className="sr-only">{t("calendar.adding_to_calendar", "Adding...")}</span>
                             </>
                           ) : tracked ? (
                             <>
                               <Check />
-                              <span>{t("calendar.added", "Added")}</span>
+                              <span>{t("calendar.added_to_calendar", "Added")}</span>
                             </>
                           ) : (
                             <>
                               <CalendarPlus />
-                              <span className="sr-only">{t("calendar.addToCalendar", "Add to Calendar")}</span>
+                              <span className="sr-only">{t("calendar.add_to_calendar", "Add to Calendar")}</span>
                             </>
                           )}
                         </Button>
@@ -296,7 +296,7 @@ export const EventsContent = () => {
           className="w-full sticky rounded-xl p-4 bg-primary/90 backdrop-blur-sm min-h-12 bottom-0 cursor-pointer">
           <ItemContent>
             <ItemTitle className="text-sm text-primary-foreground">
-              {t("tickets", "Visit the tickets website")}
+              {t("visit_tickets_website", "Get your tickets now")}
             </ItemTitle>
           </ItemContent>
           <ItemContent className="text-primary-foreground">
