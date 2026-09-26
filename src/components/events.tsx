@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import {
   Item,
@@ -98,7 +98,7 @@ export const EventsContent = () => {
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 overflow-hidden">
         <p className="text-xs text-[#f2b705] uppercase">
           {t("events.live_and_upcoming", "Live & upcoming")}
         </p>
@@ -111,20 +111,28 @@ export const EventsContent = () => {
           {events.map((item, index) => {
             const sport = SPORT_OPTIONS_BY_KEY[item.sport];
             return (
-              <Item key={index} size="sm" variant="muted">
+              <Item
+                key={index}
+                size="xs"
+                variant="outline"
+              >
                 {sport?.icon && (
-                  <ItemMedia variant="icon" className="w-10 h-10">
+                  <ItemMedia variant="icon" >
                     <Icon
                       icon={getSportIcon({ sportId: item.sport }) || "mdi:help"}
-                      className="w-10 h-10"
                     />
                   </ItemMedia>
                 )}
-                <ItemContent>
-                  <ItemTitle>{item.name}</ItemTitle>
-                  <ItemDescription>
+                <ItemContent className="min-w-0 flex-1">
+                  <ItemTitle
+                    className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
+                  >
+                    {item.name}
+                  </ItemTitle>
+                  <ItemDescription
+                    className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
+                  >
                     {new Date(item.startAt).toLocaleDateString(lang, {
-                      year: "numeric",
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",
@@ -132,13 +140,15 @@ export const EventsContent = () => {
                     })}
                     {" • "}
                     {new Date(item.endAt).toLocaleDateString(lang, {
-                      year: "numeric",
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
-                    {" • "}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemContent className="shrink-0">
+                  <ItemDescription className="text-xs">
                     {item.venue}
                   </ItemDescription>
                 </ItemContent>
@@ -146,6 +156,19 @@ export const EventsContent = () => {
             );
           })}
         </ItemGroup>
+        <Item
+          onClick={() => window.open("https://tickets.dakar2026.org/ticketing", "_blank")}
+          variant="outline"
+          className="w-full sticky rounded-xl p-4 bg-primary/90 backdrop-blur-sm min-h-12 bottom-0 cursor-pointer">
+          <ItemContent>
+            <ItemTitle className="text-sm text-primary-foreground">
+              {t("tickets", "Visit the tickets website")}
+            </ItemTitle>
+          </ItemContent>
+          <ItemContent className="text-primary-foreground">
+            <ExternalLink className="w-4 h-4 text-primary-foreground" />
+          </ItemContent>
+        </Item>
       </div>
     </div>
   );
