@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@clerk/clerk-react";
+import { cn } from "cn";
 import {
   BriefcaseBusiness,
   Calendar,
@@ -9,7 +10,7 @@ import {
   Flame,
   Map,
   Newspaper,
-  Star
+  Star,
 } from "lucide-react";
 import {
   Item,
@@ -18,22 +19,37 @@ import {
   ItemDescription,
   ItemGroup,
   ItemMedia,
-  ItemTitle
+  ItemTitle,
 } from "@/components/ui/item";
 import {
   Card,
   CardHeader,
   CardDescription,
   CardTitle,
-  CardFooter
+  CardFooter,
 } from "@/components/ui/card";
-import { cn } from "cn";
-
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import { Badge } from "./ui/badge";
 import { useStateContext } from "./state-provider";
 import { MapManager } from "../core/MapManager";
 import { Button } from "./ui/button";
+import {
+  listBusinessListings,
+} from "@/lib/api/submitBusinessListing";
+import type { BusinessListing } from "@/shared/contracts";
 
 export default function Countdown({ targetedDate }: { targetedDate: Date }) {
   const { t } = useTranslation();
@@ -69,11 +85,55 @@ export const HomeContent = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [businessListings, setBusinessListings] = useState<BusinessListing[]>([]);
 
   const {
     setActiveTab,
   } = useStateContext();
   const mapManager = MapManager.getInstance();
+
+  async function loadBusinessListings() {
+    setLoading(true);
+    try {
+      let items: BusinessListing[] = [];
+
+      items = (await listBusinessListings()) as BusinessListing[];
+
+      // sort
+      items.sort((a: BusinessListing, b: BusinessListing) => {
+        // if (sort === "updated") {
+        //   const at = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
+        //   const bt = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : 0;
+        //   if (bt !== at) return bt - at;
+        // }
+        return (a.name || "").localeCompare(b.name || "");
+      });
+
+      setBusinessListings(items);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const getFriendlyCategoryName = (category: string) => {
+    const categoryMap: Record<string, string> = {
+      "restaurant": "Restaurant",
+      "hotel": "Hotel",
+      "store": "Store",
+      "appart": "Appartement",
+      "resto": "Restaurant",
+      "concess": "Concession",
+      "boutique": "Boutique",
+      "galerie": "Galerie",
+    };
+    return categoryMap[category] || category;
+  };
+
+  useEffect(() => {
+    void loadBusinessListings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const STARTERS = [
     {
@@ -179,9 +239,76 @@ export const HomeContent = () => {
           </CardFooter>
         </Card>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <h2 className="text-xs text-muted-foreground uppercase">
-          {t("home.start_with", "Start with...")}
+          {t("home.around_me", "Around Me")}
+        </h2>
+        {loading && (
+          <div className="col-span-full grid gap-1 md:grid-cols-2 xl:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="aspect-square overflow-hidden rounded-3xl p-4 space-y-3" >
+                <Skeleton className="h-4 w-1/2 rounded bg-foreground/20" />
+                <Skeleton className="h-3 w-2/3 rounded bg-foreground/20" />
+                <Skeleton className="h-8 w-full rounded bg-foreground/20" />
+              </Skeleton>
+            ))}
+          </div>
+        )}
+
+        {!loading && businessListings.length === 0 && (
+          <Empty>
+            <EmptyHeader>
+              <EmptyDescription>
+                {t("highlighted_businesses", "Highlighted businesses will appear here.")}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+
+        {!loading && businessListings.length > 0 && (
+          <Carousel className="w-full whitespace-nowrap"
+            orientation="horizontal"
+            opts={{
+              align: "start",
+            }}
+          >
+            <CarouselContent className="-ml-1">
+              {!loading && businessListings.map((item, index) => {
+                return (
+                  <CarouselItem
+                    key={index}
+                    className="basis-1/2 pl-1 lg:basis-1/3"
+                  >
+                    <Item
+                      size="sm"
+                      variant="outline"
+                      className="relative aspect-square bg-cover overflow-hidden"
+                      style={{ backgroundImage: `url(${item.photos[0]})` }}
+                    >
+                      <Badge
+                        className="absolute start-2 top-2 z-20"
+                        variant="secondary"
+                      >
+                        {getFriendlyCategoryName(item.cat)}
+                      </Badge>
+                      <ItemContent className="flex-col justify-end absolute h-full bottom-0 left-0 right-0 bg-gradient-to-t from-background/70 to-transparent p-2">
+                        <CardTitle className="font-semibold text-sm leading-tight">
+                          {item.name}
+                        </CardTitle>
+                      </ItemContent>
+                    </Item>
+                  </CarouselItem>)
+              })}
+            </CarouselContent>
+            <CarouselPrevious size="icon-sm" variant="outline" className="left-0" />
+            <CarouselNext size="icon-sm" variant="outline" className="right-0" />
+          </Carousel>
+        )}
+
+      </div>
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xs text-muted-foreground uppercase">
+          {t("home.quick_access", "Quick Access")}
         </h2>
         <ItemGroup className="w-full grid grid-cols-[minmax(0,1fr)_5rem_5rem] gap-1">
           {STARTERS.map((item, index) => (

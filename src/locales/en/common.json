@@ -29,6 +29,8 @@
   },
   "home": {
     "start_with": "Start with…",
+    "around_me": "Around Me",
+    "highlighted_businesses": "Highlighted businesses will appear here.",
     "agenda": "Attend the events",
     "agendainfo": "Programme, sites, agenda",
     "discover": "Discover Senegal",
