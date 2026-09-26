@@ -69,7 +69,8 @@ export type Event = {
   region?: string | null;
   sport?: string | null;
   status?: string | null;
-  datetime: Date | string;
+  startAt: Date | string;
+  endAt: Date | string;
   venue?: string | null;
   updatedAt?: Date | any;
 };
@@ -389,15 +390,27 @@ export function EventPage() {
                     <CardDescription>{item.venue}</CardDescription>
                   )}
 
-                  {item.datetime && (
+                  {item.startAt && item.endAt && (
                     <CardDescription>
-                      {new Date(item.updatedAt).toLocaleDateString(lang, {
+                      <span>
+                      {new Date(item.startAt).toLocaleDateString(lang, {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
+                      </span>
+                      {" • "}
+                      <span>
+                      {new Date(item.endAt).toLocaleDateString(lang, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      </span>
                     </CardDescription>
                   )}
                 </CardContent>
@@ -432,7 +445,8 @@ export function AddEventPage() {
   const [name, setName] = useState("");
   const [status, setStatus] = useState("");
   const [venue, setVenue] = useState("");
-  const [datetime, setDatetime] = useState<Date | undefined>(undefined);
+  const [startAt, setStartAt] = useState<Date | undefined>(undefined);
+  const [endAt, setEndAt] = useState<Date | undefined>(undefined);
   const [lat, setLat] = useState<number | "">("");
   const [lng, setLng] = useState<number | "">("");
   const [region, setRegion] = useState("");
@@ -494,7 +508,8 @@ export function AddEventPage() {
           type: "Point",
           coordinates: [Number(lng), Number(lat)],
         },
-        datetime: datetime || new Date(),
+        startAt: startAt || new Date(),
+        endAt: endAt || new Date(),
         status: status || "",
         venue: venue,
       });
@@ -508,7 +523,8 @@ export function AddEventPage() {
       // reset form
       setName("");
       setVenue("");
-      setDatetime(undefined);
+      setStartAt(undefined);
+      setEndAt(undefined);
       setStatus("");
       setRegion("");
       setLat(0);
@@ -562,7 +578,8 @@ export function AddEventPage() {
               setRegion("");
               setStatus("");
               setVenue("");
-              setDatetime(undefined);
+              setStartAt(undefined);
+              setEndAt(undefined);
               setLat("");
               setLng("");
               setSport("");
@@ -583,8 +600,10 @@ export function AddEventPage() {
             setStatus={setStatus}
             venue={venue}
             setVenue={setVenue}
-            datetime={datetime}
-            setDatetime={setDatetime}
+            startAt={startAt}
+            setStartAt={setStartAt}
+            endAt={endAt}
+            setEndAt={setEndAt}
             lat={lat}
             setLat={setLat}
             lng={lng}
@@ -616,7 +635,8 @@ export function EditEventPage() {
   const [sport, setSport] = useState<VenueSport["key"] | "">("");
   const [status, setStatus] = useState("");
   const [venue, setVenue] = useState("");
-  const [datetime, setDatetime] = useState<Date | undefined>(undefined);
+  const [startAt, setStartAt] = useState<Date | undefined>(undefined);
+  const [endAt, setEndAt] = useState<Date | undefined>(undefined);
   const [region, setRegion] = useState("");
 
   const canSave = !!eventId && !!name && lat !== "" && lng !== "" && !saving;
@@ -678,7 +698,8 @@ export function EditEventPage() {
         setSport((d.sport as VenueSport["key"]) || "");
         setStatus(d.status || "");
         setVenue(d.venue || "");
-        setDatetime(d.datetime ? new Date(d.datetime) : undefined);
+        setStartAt(d.startAt ? new Date(d.startAt) : undefined);
+        setEndAt(d.endAt ? new Date(d.endAt) : undefined);
         setRegion(d.region || "");
       } finally {
         setLoading(false);
@@ -700,7 +721,8 @@ export function EditEventPage() {
         },
         status: status || null,
         venue: venue,
-        datetime: datetime || null,
+        startAt: startAt || null,
+        endAt: endAt || null,
         region: region || null,
       });
       toast.success(t("events.eventupdate.success", "Changes saved."));
@@ -778,8 +800,10 @@ export function EditEventPage() {
             setStatus={setStatus}
             venue={venue}
             setVenue={setVenue}
-            datetime={datetime}
-            setDatetime={setDatetime}
+            startAt={startAt}
+            setStartAt={setStartAt}
+            endAt={endAt}
+            setEndAt={setEndAt}
             lat={lat}
             setLat={setLat}
             lng={lng}
@@ -803,8 +827,10 @@ const FormComp = ({
   setStatus,
   venue,
   setVenue,
-  datetime,
-  setDatetime,
+  startAt,
+  setStartAt,
+  endAt,
+  setEndAt,
   lat,
   setLat,
   lng,
@@ -821,8 +847,10 @@ const FormComp = ({
   setStatus: (value: string) => void;
   venue: string;
   setVenue: (value: string) => void;
-  datetime?: Date;
-  setDatetime: (value?: Date) => void;
+  startAt?: Date;
+  setStartAt: (value?: Date) => void;
+  endAt?: Date;
+  setEndAt: (value?: Date) => void;
   lat: number | "";
   setLat: (value: number | "") => void;
   lng: number | "";
@@ -929,17 +957,28 @@ const FormComp = ({
             onChange={(e) => setVenue(e.target.value)}
           />
         </Field>
-
+        <div className="flex items-center justify-between gap-2">
         <Field>
-          <FieldLabel htmlFor="datetime">
-            {t("events.fields.datetime", "Event Date and time")}
+          <FieldLabel htmlFor="startime">
+            {t("events.fields.startime", "Event Start Date and time")}
           </FieldLabel>
           <DateTimePicker
             // id="datetime"
-            date={datetime}
-            setDate={setDatetime}
+            date={startAt}
+            setDate={setStartAt}
           />
         </Field>
+        <Field>
+          <FieldLabel htmlFor="endtime">
+            {t("events.fields.endtime", "Event End Date and time")}
+          </FieldLabel>
+          <DateTimePicker
+            // id="datetime"
+            date={endAt}
+            setDate={setEndAt}
+          />
+        </Field>
+        </div>
       </Section>
 
       <Section title={t("events.location.title", "Location details")}>

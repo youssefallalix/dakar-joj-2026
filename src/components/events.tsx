@@ -17,7 +17,8 @@ type ApiEventsItem = {
   _id: string;
   name: string;
   updatedAt: string;
-  datetime: string;
+  startAt: string;
+  endAt: string;
   venue: string;
   sport: string;
 };
@@ -122,14 +123,23 @@ export const EventsContent = () => {
                 <ItemContent>
                   <ItemTitle>{item.name}</ItemTitle>
                   <ItemDescription>
-                    {new Date(item.datetime).toLocaleDateString(lang, {
+                    {new Date(item.startAt).toLocaleDateString(lang, {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}{" "}
-                    • {item.venue}
+                    })}
+                    {" • "}
+                    {new Date(item.endAt).toLocaleDateString(lang, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {" • "}
+                    {item.venue}
                   </ItemDescription>
                 </ItemContent>
               </Item>

@@ -22,7 +22,8 @@ export async function createEvent(payload: {
     type?: "Point";
     coordinates: [number, number];
   };
-  datetime: Date | string;
+  startAt: Date | string;
+  endAt: Date | string;
 }) {
   const response = await apiRequest<{ success: true; data: Event }>(`/api/v2/events`, {
     method: "POST",

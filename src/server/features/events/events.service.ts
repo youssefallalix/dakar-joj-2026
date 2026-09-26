@@ -19,7 +19,8 @@ function buildPayload(input: any, includeCreatedAt = true) {
     sport: input.sport ?? null,
     venue: input.venue ?? null,
     location: input.location ?? null,
-    datetime: input.datetime ?? null,
+    startAt: input.startAt ?? null,
+    endAt: input.endAt ?? null,
     updatedAt: new Date(),
   };
 
@@ -74,7 +75,7 @@ export async function getEventById(id: string) {
   return {
     ...doc,
     _id: doc._id.toString(),
-    datetime: doc.datetime instanceof Date ? doc.datetime.toISOString() : doc.datetime,
+    startAt: doc.startAt instanceof Date ? doc.startAt.toISOString() : doc.startAt,
   };
 }
 
@@ -93,7 +94,7 @@ export async function updateEvent(id: string, input: EventPayload) {
   const filter = idFilter(id);
   const payload = buildPayload(input, false);
 
-  const fields = ["name", "nameFr", "status", "sport", "location", "datetime", "venue"] as const;
+  const fields = ["name", "nameFr", "status", "sport", "location", "startAt", "endAt", "venue"] as const;
 
   const changed = Object.fromEntries(
     fields
