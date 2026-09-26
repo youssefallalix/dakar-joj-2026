@@ -11,7 +11,7 @@ import AddPlaceFull from "./admin/places/AddPlaceFull";
 import { PlacesListPage } from "./admin/places/PlacesList";
 import { PlaceDetailsPage } from "./admin/places/PlacesDetails";
 import { TorchPage, AddTorchPage, EditTorchPage } from "./pages/torch/TorchPage";
-import { EventPage } from "./pages/events/EventPage";
+import { EventPage, AddEventPage, EditEventPage } from "./pages/events/EventPage";
 import { PricingPage } from "./pages/pricing";
 import { LoginPage } from "./pages/login";
 import { BusinessCreate, BusinessPage, BusinessEdit } from "./pages/business";
@@ -95,6 +95,8 @@ export default function App() {
               <Route path="places/:zoneId/:placeId" element={<PlaceDetailsPage />} />
 
               <Route path="events" element={<EventPage />} />
+              <Route path="events/new" element={<AddEventPage />} />
+              <Route path="events/:eventId" element={<EditEventPage />} />
 
               <Route path="torch" element={<TorchPage />} />
               <Route path="torch/new" element={<AddTorchPage />} />
