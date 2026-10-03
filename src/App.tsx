@@ -9,6 +9,7 @@ import AdminRoute from "./components/auth/AdminRoute";
 import BusinessRoute from "./components/auth/BusinessRoute";
 import AddPlaceFull from "./admin/places/AddPlaceFull";
 import { BusinessPage4Admin } from "./pages/BusinessPage";
+import { SubscriptionsPage } from "./pages/SubscriptionsPage";
 import { PlacesListPage } from "./admin/places/PlacesList";
 import { PlaceDetailsPage } from "./admin/places/PlacesDetails";
 import { TorchPage, AddTorchPage, EditTorchPage } from "./pages/torch/TorchPage";
@@ -104,6 +105,7 @@ export default function App() {
               <Route path="torch/:torchStopId" element={<EditTorchPage />} />
 
               <Route path="listings" element={<BusinessPage4Admin />} />
+              <Route path="subscriptions" element={<SubscriptionsPage />} />
 
             </Route>
 

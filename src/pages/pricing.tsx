@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { cn } from "cn";
 import { Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -15,14 +16,27 @@ import {
 } from "@/components/ui/card";
 import { HeaderBar } from "../components/header/HeaderBar";
 import { PRICING_PLANS } from "../components/pricing/pricingplans.config";
+import { cancelMySubscription, confirmPayment, createPaymentCheckout, getMySubscription } from "../lib/api/payments";
+import { toast } from "sonner";
 
 export function PricingPage() {
   const { t } = useTranslation();
-  const { user } = useUser();
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  const currentPlan = user?.publicMetadata?.plan;
+  const [subscription, setSubscription] = useState<{ plan: string; status: string } | null>(null);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const token = new URLSearchParams(window.location.search).get("token");
+    const load = async () => {
+      if (token) await confirmPayment(token);
+      setSubscription(await getMySubscription());
+    };
+    void load().catch((error) => toast.error(error instanceof Error ? error.message : "Unable to load payment status"));
+  }, [isSignedIn]);
+
+  const currentPlan = subscription?.plan;
 
   const currentPlanId: keyof typeof PRICING_PLANS =
     typeof currentPlan === "string" && currentPlan in PRICING_PLANS
@@ -46,11 +60,14 @@ export function PricingPage() {
       if (planId === "discover") {
         return {
           label: t("pricing.downgrade_to_discover", "Downgrade to Discover"),
-          action: (e: any) => {
-            e.stopPropagation();
-            window.open(
-              `mailto:francisehemba2021@gmail.com?subject=Downgrade%20to%20${planId}%20Plan&body=Hello,%0D%0A%0D%0AI%20would%20like%20to%20downgrade%20to%20the%20${planId}%20plan.%0D%0A%0D%0AThank%20you!`
-            );
+          action: async () => {
+            if (!confirm(t("pricing.cancel_confirm", "Cancel your current plan?"))) return;
+            try {
+              setSubscription(await cancelMySubscription());
+              toast.success(t("pricing.cancelled", "Plan canceled"));
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Unable to cancel plan");
+            }
           },
           disabled: false,
           variant: "ghost" as const,
@@ -68,19 +85,22 @@ export function PricingPage() {
     }
 
     return {
-      label: t("pricing.contact_us", "Contact us"),
-      action: (e: any) => {
-        e.stopPropagation();
-        window.open(
-          `mailto:francisehemba2021@gmail.com?subject=Upgrade%20to%20${planId}%20Plan&body=Hello,%0D%0A%0D%0AI%20would%20like%20to%20upgrade%20to%20the%20${planId}%20plan.%0D%0A%0D%0AThank%20you!`
-        );
+      label: planId === "sponsor" ? t("pricing.contact_us", "Contact us") : t("pricing.pay", "Purchase"),
+      action: async () => {
+        if (planId === "sponsor") { window.location.href = "mailto:francisehemba2021@gmail.com?subject=Sponsor%20plan"; return; }
+        try {
+          const { checkoutUrl } = await createPaymentCheckout(planId);
+          window.location.assign(checkoutUrl);
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Unable to start payment");
+        }
       },
       disabled: false,
       variant: "outline" as const,
     };
   };
 
-  const checkIsCurrentPlan = (planId: keyof typeof PRICING_PLANS) => (isSignedIn && planId === currentPlanId);
+  const checkIsCurrentPlan = (planId: keyof typeof PRICING_PLANS) => (isSignedIn && planId === currentPlanId && subscription?.status !== "canceled");
 
   const formatPrice = (price: number) =>
     price === 0

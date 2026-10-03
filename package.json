@@ -51,6 +51,7 @@
     "lucide-react": "^1.27.0",
     "mapbox-gl": "^3.13.0",
     "mongodb": "^7.6.0",
+    "paydunya": "^1.0.12",
     "react": "^19.1.0",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.1.0",

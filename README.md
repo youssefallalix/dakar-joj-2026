@@ -57,6 +57,11 @@ The Hono API runs in the same repo and expects these variables for MongoDB, auth
 - `ORS_API_KEY` for the OpenRouteService itinerary proxy
 - `ORS_BASE_URL` (optional override, defaults to `https://api.openrouteservice.org`)
 - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME` for direct business media uploads
+- `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, and `PAYDUNYA_TOKEN` from your PayDunya application
+- `PAYDUNYA_PUBLIC_KEY` (optional), `PAYDUNYA_MODE` (`test` or `live`), and `PAYDUNYA_STORE_NAME`
+- `APP_BASE_URL` set to the public app URL; PayDunya must be configured to call `${APP_BASE_URL}/api/v2/payments/callback`
+
+The payment flow is a one-time seasonal entitlement: PayDunya hosts the checkout, while this app stores the confirmed payment and subscription state in MongoDB. The user can cancel access from `/pricing`, and admins can manage subscriptions at `/admin/subscriptions`. Configure PayDunya callback delivery before switching `PAYDUNYA_MODE` to `live`.
 
 The R2 bucket must allow browser `PUT` requests from every Vite origin. Configure this in the R2 bucket's **Settings → CORS policy** in Cloudflare; Hono's API CORS middleware cannot configure R2. For local development, use `http://localhost:5173` (include the exact scheme, host, and port). If you use a VS Code Dev Tunnel, add its HTTPS origin too, for example `https://1zq2wjbn-5173.usw3.devtunnels.ms`:
 

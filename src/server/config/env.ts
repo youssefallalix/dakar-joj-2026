@@ -22,6 +22,13 @@ const envSchema = z.object({
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET_NAME: z.string().optional(),
+  PAYDUNYA_MASTER_KEY: z.string().optional(),
+  PAYDUNYA_PRIVATE_KEY: z.string().optional(),
+  PAYDUNYA_PUBLIC_KEY: z.string().optional(),
+  PAYDUNYA_TOKEN: z.string().optional(),
+  PAYDUNYA_MODE: z.enum(["test", "live"]).default("test"),
+  PAYDUNYA_STORE_NAME: z.string().default("My App"),
+  APP_BASE_URL: z.string().url().default("http://localhost:5173"),
 });
 
 const parsed = envSchema.safeParse(process.env);

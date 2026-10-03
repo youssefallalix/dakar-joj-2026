@@ -42,6 +42,16 @@ export function AdminShell() {
           <NavigationMenuList>
             <NavigationMenuItem>
               <NavigationMenuLink
+                render={<Link
+                  to="/admin/subscriptions"
+                  className="inline-flex items-center gap-2 py-2"
+                />}
+              >
+                {t("admin.subscriptions", "Subscriptions")}
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink
                 // className={navigationMenuTriggerStyle()}
                 render={<Link
                   to="/admin/listings"

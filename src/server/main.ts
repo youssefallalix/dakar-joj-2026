@@ -19,6 +19,7 @@ import { metadataRoutes } from "./features/metadata/metadata.routes.js";
 import { uploadRoutes } from "./features/uploads/upload.routes.js";
 import { itineraryRoutes } from "./features/itinerary/itinerary.routes.js";
 import { eventRoutes } from "./features/events/events.routes.js";
+import { paymentsRoutes } from "./features/payments/payments.routes.js";
 import { attachSessionUser } from "./middleware/auth.js";
 import { fail } from "./http/response.js";
 import { HttpError } from "./http/errors.js";
@@ -71,6 +72,7 @@ v2Routes.route("/business/listings", listingRoutes);
 v2Routes.route("/metadata", metadataRoutes);
 v2Routes.route("/news", newsRoutes);
 v2Routes.route("/uploads", uploadRoutes);
+v2Routes.route("/payments", paymentsRoutes);
 
 const itineraryCoordinateSchema = z
   .tuple([z.number(), z.number()])

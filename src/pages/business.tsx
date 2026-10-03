@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, MoreVertical, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFilesToR2 } from "@/lib/api/uploads";
+import { getMySubscription } from "@/lib/api/payments";
 import { getMediaUrl } from "@/lib/fileConvert";
 import { getFriendlyCategoryName } from "@/utils/key-translations";
 
@@ -333,9 +334,9 @@ export function BusinessPage() {
 
 export function BusinessCreate() {
   const { t } = useTranslation();
-  const { user } = useUser();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [plan, setPlan] = useState("discover");
 
   const breadcrumbConfig: BreadcrumbConfig = {
     "/business": {
@@ -347,11 +348,15 @@ export function BusinessCreate() {
     },
   }
 
-  const metadataPlan = user?.publicMetadata?.plan;
-  const selectedPlan =
-    typeof metadataPlan === "string" && metadataPlan in BUSINESS_PLANS
-      ? (metadataPlan as BusinessCreateValues["pack"])
-      : "discover";
+  const selectedPlan = plan in BUSINESS_PLANS
+    ? (plan as BusinessCreateValues["pack"])
+    : "discover";
+
+  useEffect(() => {
+    void getMySubscription()
+      .then((subscription) => setPlan(subscription.plan))
+      .catch(() => undefined);
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(businessCreateSchema),
