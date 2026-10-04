@@ -508,7 +508,7 @@ export const HomeContent = () => {
   useEffect(() => {
     void loadBusinessListings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location]);
 
   const STARTERS = [
     {
@@ -687,8 +687,8 @@ export const HomeContent = () => {
             </CarouselItem>
           )}
         </CarouselContent>
-        <CarouselPrevious size="icon-sm" variant="outline" className="-top-4" />
-        <CarouselNext size="icon-sm" variant="outline" className="-bottom-4" />
+        <CarouselPrevious size="icon-sm" variant="secondary" className="-top-4" />
+        <CarouselNext size="icon-sm" variant="secondary" className="-bottom-4" />
       </Carousel>
 
       <Collapsible
@@ -712,13 +712,15 @@ export const HomeContent = () => {
           </Empty>
         )}
 
-          <Carousel className="w-full"
+        {!open && businessListings.length > 0 && (
+          <Carousel
+            className="w-full"
             orientation="horizontal"
             opts={{
               align: "start",
             }}
             >
-          {loading && (
+            {loading && (
             <CarouselContent className="-ml-1">
               {[...Array(3)].map((_, i) => (
                 <CarouselItem
@@ -733,7 +735,8 @@ export const HomeContent = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-          )}
+            )}
+
             {!open && !loading && businessListings.length > 0 && (
             <CarouselContent className="-ml-1">
               {!loading && businessListings
@@ -796,14 +799,27 @@ export const HomeContent = () => {
                 )
               })}
             </CarouselContent>
-          )}
-            <CarouselPrevious size="icon-sm" variant="outline" className="left-0" />
-            <CarouselNext size="icon-sm" variant="outline" className="right-0" />
+            )}
+            <CarouselPrevious size="icon-sm" variant="secondary" className="left-0" />
+            <CarouselNext size="icon-sm" variant="secondary" className="right-0" />
           </Carousel>
+        )}
+
         <CollapsibleContent>
-          <div className="flex gap-0.25">
-            {!loading && businessListings.map((item, index) => {
-              return (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-0.25">
+            {!loading && businessListings
+              .filter(
+                (item) =>
+                  item.pack !== "discover" &&
+                  item.pack !== "essential"
+              )
+              .sort((a, b) => {
+                if (a.pack === "sponsor") return -1;
+                if (b.pack === "sponsor") return 1;
+                return 0;
+              })
+              .map((item, index) => {
+                return (
                 <div
                   key={index}
                   className="basis-1/2 pl-1 lg:basis-1/3"
@@ -871,6 +887,7 @@ export const HomeContent = () => {
           }
         />
       </Collapsible>
+
       <div className="flex flex-col gap-3">
         <h2 className="text-xs text-muted-foreground uppercase">
           {t("home.quick_access", "Quick Access")}
