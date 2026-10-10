@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "cn";
 import Autoplay from "embla-carousel-autoplay";
-import { formatDuration } from "../utils/calendar";
+// import { formatDuration } from "../utils/calendar";
 import { useRelativeTime } from "@/utils/helpers";
 import { getSportIcon } from "@/utils/helpers";
 import { Icon } from "@iconify/react";
@@ -194,15 +194,18 @@ export const Promo = () => {
                     </CardTitle>
                     <CardDescription
                       className="min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
-                      title={new Date(item.startAt).toLocaleDateString(lang, {
+                      title={getRelativeTime(new Date(item.startAt))}
+                    >
+                      {new Date(item.startAt).toLocaleDateString(lang, {
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
-                      })}                      >
-                      {getRelativeTime(new Date(item.startAt))}
+                      })}
+                      {/*
                       {" • "}
                       {formatDuration(item.startAt, item.endAt, lang)}
+                      */}
                     </CardDescription>
                   </CardContent>
                   <CardFooter className="shrink-0">

@@ -18,7 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Icon } from "@iconify/react";
 import {
   getCalendarUrl,
-  formatDuration,
+  // formatDuration,
 } from "../utils/calendar";
 import { addEventToCalendar } from "../lib/api/events";
 import { ALL_SPORT_OPTIONS } from "../data/sports";
@@ -281,8 +281,10 @@ export const EventsContent = () => {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
+                          {/*
                           {" • "}
                           {formatDuration(item.startAt, item.endAt, lang)}
+                          */}
                         </ItemDescription>
                       </ItemContent>
                       <ItemContent className="shrink-0">
