@@ -13,6 +13,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { BusinessListing } from "../../shared/contracts";
 import { useStateContext } from "../state-provider";
+import { getFriendlyCategoryName } from "@/utils/key-translations";
 import { getMediaUrl } from "@/lib/fileConvert";
 
 type RouteStep = {
@@ -87,7 +88,7 @@ export function BusinessDetails({ listing }: { listing: unknown }) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm/7 font-extralight text-muted-foreground">
-                {business.cat}
+                {getFriendlyCategoryName(business.cat, t)}
               </span>
             </div>
 
